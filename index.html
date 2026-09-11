@@ -236,7 +236,7 @@
         <div class="per">per listing at <b id="count">0</b> listings / year <span id="perMonth"></span></div>
         <div class="nudge" id="nudge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          <span id="nudgeText">Commit to 6 listings to unlock 14% off</span>
+          <span id="nudgeText">Commit to 6 or more listings and your rate starts dropping</span>
         </div>
       </div>
     </div>
@@ -289,7 +289,7 @@ var ShowcasePricing = (function(){
   var MIN_COMMIT = 6;                                  // first contract tier starts here
   // Top-of-band anchors: [listings, % off]. Linear between anchors, so the shown
   // discount never exceeds what the contract grants at that count.
-  var ANCHORS = [[6,14],[23,14],[35,23],[47,31],[59,40],[71,44],[99,49],[119,51],[179,53],
+  var ANCHORS = [[5,0],[23,14],[35,23],[47,31],[59,40],[71,44],[99,49],[119,51],[179,53],
                  [239,55],[374,57],[499,59],[749,61],[899,64],[900,66]];
   var CAP = ANCHORS[ANCHORS.length - 1];
   // Round percentages called out on the chart; the slider stops sit where the ramp reaches them.
@@ -314,9 +314,9 @@ var ShowcasePricing = (function(){
     for (var c = MIN_COMMIT; c <= CAP[0]; c++){ if (discountFor(c) >= pct) return c; }
     return CAP[0];
   }
-  // Milestones the nudge points at: the entry tier, each round percent, then the cap.
+  // Milestones the nudge points at: each round percent, then the cap.
   function nextMilestone(c){
-    var ms = [[MIN_COMMIT, ANCHORS[0][1]]].concat(MARKS.map(function(p){ return [countForPct(p), p]; })).concat([CAP]);
+    var ms = MARKS.map(function(p){ return [countForPct(p), p]; }).concat([CAP]);
     for (var i = 0; i < ms.length; i++){
       if (ms[i][0] > c) return { add: ms[i][0] - c, at: ms[i][0], pct: ms[i][1] };
     }
@@ -405,11 +405,10 @@ var ShowcasePricing = (function(){
   function rebuild(){
     W = chart.clientWidth; H = chart.clientHeight;
     if (W < 10 || H < 10) return;
-    // Sample every listing count so flats and steps draw exactly as priced.
+    // Sample every listing count so the curve draws exactly as priced.
     var d = "";
     for (var c = 0; c <= MAX_COUNT; c++){
       var x = xForCount(c), y = yAt(P.priceFor(base, c));
-      if (c === P.MIN_COMMIT){ d += " L" + x.toFixed(1) + " " + yAt(base).toFixed(1); } // vertical step at 6
       d += (c ? " L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
     }
     curveEl.setAttribute("d", d);
@@ -498,7 +497,7 @@ var ShowcasePricing = (function(){
 
     var next = P.nextMilestone(count);
     if (!committed){
-      nudgeText.textContent = "Commit to " + P.MIN_COMMIT + " listings to unlock 14% off";
+      nudgeText.textContent = "Commit to " + P.MIN_COMMIT + " or more listings and your rate starts dropping";
     } else if (next){
       nudgeText.textContent = "Add " + next.add + " more listing" + (next.add === 1 ? "" : "s") + " to reach " + next.pct + "% off";
     } else {
